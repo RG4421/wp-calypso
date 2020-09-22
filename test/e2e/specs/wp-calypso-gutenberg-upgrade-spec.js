@@ -56,7 +56,9 @@ const blockInits = new Map()
 		await block.openEditSettings();
 		await block.insertEmail( 'testing@automattic.com' );
 		await block.insertSubject( "Let's work together" );
-	} );
+	} )
+	.set( SlideshowBlockComponent, ( block ) => block.uploadImages( sampleImages ) )
+	.set( GalleryMasonryBlockComponent, ( block ) => block.uploadImages( sampleImages ) );
 
 /**
  * Wrapper that provides an uniform API for creating blocks on the page. It uses the `inits`
