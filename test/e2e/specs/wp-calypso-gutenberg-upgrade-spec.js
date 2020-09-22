@@ -56,7 +56,10 @@ const blockInits = new Map()
 		await block.openEditSettings();
 		await block.insertEmail( 'testing@automattic.com' );
 		await block.insertSubject( "Let's work together" );
-	} );
+	} )
+	.set( YoutubeBlockComponent, ( block ) =>
+		block.embed( 'https://www.youtube.com/watch?v=FhMO5QnRNvo' )
+	);
 
 /**
  * Wrapper that provides an uniform API for creating blocks on the page. It uses the `inits`
