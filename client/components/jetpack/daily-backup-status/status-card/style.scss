@@ -50,12 +50,10 @@
 	font-size: $font-body-small;
 }
 
-
 /* Buttons */
 .daily-backup-status .form-button.status-card__support-button {
 	margin: 32px 0;
 }
-
 
 /* Status-specific rules */
 .status-card__no-backup-last-backup {
@@ -63,11 +61,14 @@
 	font-style: italic;
 }
 
-
 /* Details for real-time backups */
 .status-card__realtime-details {
 	margin-top: 24px;
 	text-align: left;
+
+	&.is-simplified {
+		margin-top: 48px;
+	}
 }
 
 .status-card__realtime-details-card .activity-card .card {
@@ -96,19 +97,10 @@
 	margin-right: 0.2rem;
 }
 
-.status-card__realtime-details-card
-	.activity-card
-	.card
-	.activity-log-item__actor
-	.gravatar,
-.status-card__realtime-details-card
-	.activity-card
-	.card
-	.activity-log-item__actor
-	svg {
+.status-card__realtime-details-card .activity-card .card .activity-log-item__actor .gravatar,
+.status-card__realtime-details-card .activity-card .card .activity-log-item__actor svg {
 	width: 30px;
 }
-
 
 /* Screen size-specific rules */
 .status-card__hide-mobile {
