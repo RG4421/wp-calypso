@@ -1,6 +1,7 @@
 /**
  * External dependencies
  */
+import crypto from 'crypto';
 import emailValidator from 'email-validator';
 import i18n, { TranslateResult } from 'i18n-calypso';
 import { countBy, find, includes, groupBy, map, mapValues } from 'lodash';
@@ -24,12 +25,14 @@ export interface GSuiteNewUser {
 	mailBox: GSuiteNewUserField;
 	firstName: GSuiteNewUserField;
 	lastName: GSuiteNewUserField;
+	password: GSuiteNewUserField | null;
 }
 
 export interface GSuiteProductUser {
 	firstname: string;
 	lastname: string;
 	email: string;
+	hash: string;
 }
 
 /**
@@ -167,14 +170,32 @@ const validateNewUsersAreUnique = ( users: GSuiteNewUser[] ) => {
 		users.map( ( { mailBox: { value: mailBox } } ) => mailBox )
 	);
 
-	return users.map( ( { uuid, domain, mailBox, firstName, lastName } ) => ( {
+	return users.map( ( {
+        uuid,
+        domain,
+        mailBox,
+        firstName,
+        lastName,
+		password
+	} ) => ( {
 		uuid,
 		firstName,
 		lastName,
 		domain,
 		mailBox: validateNewUserMailboxIsUnique( mailBox, mailboxesByCount ),
+		password
 	} ) );
 };
+
+const validatePasswordField = ( { value, error }: GSuiteNewUserField ): GSuiteNewUserField => ( {
+	value,
+	error:
+		! error && 100 < value.length
+			? i18n.translate( "This field can't be longer than %s characters.", {
+				args: '100',
+			} )
+			: error,
+} );
 
 /*
  * Run all validations on a user:
@@ -185,7 +206,7 @@ const validateNewUsersAreUnique = ( users: GSuiteNewUser[] ) => {
  */
 const validateUser = ( user: GSuiteNewUser ): GSuiteNewUser => {
 	// every field is required. Also scrubs previous errors.
-	const { domain, mailBox, firstName, lastName } = mapFieldValues( user, ( field ) =>
+	const { domain, mailBox, firstName, lastName, password } = mapFieldValues( user, ( field ) =>
 		requiredField( field )
 	);
 
@@ -195,6 +216,7 @@ const validateUser = ( user: GSuiteNewUser ): GSuiteNewUser => {
 		mailBox: validateOverallEmail( validEmailCharacterField( mailBox ), domain ),
 		firstName: sixtyCharacterField( firstName ),
 		lastName: sixtyCharacterField( lastName ),
+		password: validatePasswordField( password ),
 	};
 };
 
@@ -215,7 +237,7 @@ const validateUsers = (
 };
 
 const validateAgainstExistingUsers = (
-	{ uuid, domain, mailBox, firstName, lastName }: GSuiteNewUser,
+	{ uuid, domain, mailBox, firstName, lastName, password }: GSuiteNewUser,
 	existingGSuiteUsers: [  ]
 ) => ( {
 	uuid,
@@ -223,6 +245,7 @@ const validateAgainstExistingUsers = (
 	lastName,
 	domain,
 	mailBox: validateOverallEmailAgainstExistingEmails( mailBox, domain, existingGSuiteUsers ),
+	password,
 } );
 
 const newField = ( value = '' ): GSuiteNewUserField => ( {
@@ -237,6 +260,7 @@ const newUser = ( domain = '' ): GSuiteNewUser => {
 		lastName: newField(),
 		mailBox: newField(),
 		domain: newField( domain ),
+		password: newField(),
 	};
 };
 
@@ -269,10 +293,12 @@ const transformUserForCart = ( {
 	lastName: { value: lastname },
 	domain: { value: domain },
 	mailBox: { value: mailBox },
+	password: { value: password },
 }: GSuiteNewUser ): GSuiteProductUser => ( {
 	email: `${ mailBox }@${ domain }`.toLowerCase(),
 	firstname,
 	lastname,
+	hash: crypto.createHash( 'sha256' ).update( password ).digest( 'hex' ),
 } );
 
 const getItemsForCart = (
